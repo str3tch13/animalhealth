@@ -32,7 +32,7 @@ import junit.framework.Assert;
 
 public class JDBCDepartmentDAOIntegrationTest {
 
-	private static final long TEST_DEPARTMENT_ID = (long) 100;
+	private static final long TEST_DEPARTMENT_ID = 100;
 	
 	/*
 	 * use a single datasource so every database interaction 
@@ -42,11 +42,13 @@ public class JDBCDepartmentDAOIntegrationTest {
 	private static SingleConnectionDataSource dataSource; 
 	private JDBCDepartmentDAO dao; 
 	
+	
+	
 	/* run once before any tests are run */
 	@BeforeClass
 	public static void setupDataSource() {
 		dataSource = new SingleConnectionDataSource();
-		dataSource.setUrl("jdbc:postgresql://localhost:5432/ProjectOrganizer");
+		dataSource.setUrl("jdbc:postgresql://localhost:5432/Project_Organize_SQL");
 		dataSource.setUsername("postgres");
 		dataSource.setPassword("postgres1");//for the sake of time during class. should use env
 		
@@ -102,13 +104,13 @@ public class JDBCDepartmentDAOIntegrationTest {
 		List<Department> results = dao.searchDepartmentsByName("Stock");
 		List<Department> checkedDepartments = new ArrayList<>();
 		assertEquals(checkedDepartments, dao.searchDepartmentsByName("thereIsNoDepartmentThatHasThisStringInItsName"));
-//		assertNull(dao.searchDepartmentsByName(null));
+
 		
 		assertNotNull(results);
 		assertEquals(1, results.size());
 		Assert.assertTrue(areDepartmentsEqual(theDept, results.get(0)));
 		
-//		assertThat(theDept, IsEqualIgnoringCase.equalToIgnoringCase(expected));
+
 	}
 	
 	@Test
@@ -146,7 +148,23 @@ public class JDBCDepartmentDAOIntegrationTest {
 		
 	}
 	
-
+	@Test
+	public void search_department_by_id_test() {
+			
+		Department dep = new Department();
+		dep.setName("Bathroom");
+		dep.setId(TEST_DEPARTMENT_ID);
+		dao.createDepartment(dep);
+		Department depRevived = dao.getDepartmentById(dep.getId());
+		assertNotNull(depRevived);
+		assertNotNull(dep);
+		
+		Department depDead = dao.getDepartmentById(null);
+		assertNull(null,depDead);
+		
+	}
+	                                    
+	
 	@Test
 	public void create_a_department_test() {
 //		//arrange
@@ -164,13 +182,18 @@ public class JDBCDepartmentDAOIntegrationTest {
 		theDept.setId(TEST_DEPARTMENT_ID); 	
 		dao.createDepartment(theDept);	
 		//YOU MUST READ FROM THE DATABASE AGAIN TO REALLY TEST 	
-		Department createdDept = theDept; 
+		Department createdDept = dao.getDepartmentById(theDept.getId()); 
 		assertNotNull(theDept); 	
 		assertNotNull(createdDept); 
-		assertEquals(theDept,createdDept);	
-		assertNotEquals(null, createdDept); 
-		assertEquals("A different Dept", createdDept.getName()); 	
-		assertNotEquals(theDept, null); 
+		Assert.assertTrue((areDepartmentsEqual(theDept,createdDept)));
+		
+	}
+		
+		//assertNotEquals(null, createdDept); 
+		//assertEquals("A different Dept", createdDept.getName()); 	
+		//assertNotEquals(theDept, null); 
+//	}
+	
 		
 //		Department theDept2 = new Department();
 //		theDept2.setName("A different Dept"); 
@@ -184,7 +207,7 @@ public class JDBCDepartmentDAOIntegrationTest {
 //		assertNotEquals(null, createdDept2); 
 //		assertEquals("A different Dept", createdDept2.getName()); 	
 //		assertNotEquals(theDept2, null); 
-	}
+	
 	
 	private boolean areDepartmentsEqual(Department d1, Department d2) {
 	
