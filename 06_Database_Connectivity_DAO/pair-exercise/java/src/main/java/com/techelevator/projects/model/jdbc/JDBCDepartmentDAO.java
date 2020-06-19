@@ -38,13 +38,16 @@ public class JDBCDepartmentDAO implements DepartmentDAO {
 	public List<Department> searchDepartmentsByName(String nameSearch) {
 		List<Department> foundDepartments = new ArrayList<>();
 		String sql = "SELECT department_id, name FROM department WHERE name ILIKE ?";
-		SqlRowSet results = jdbcTemplate.queryForRowSet(sql, nameSearch);
+		SqlRowSet results = jdbcTemplate.queryForRowSet(sql, "%" + nameSearch + "%");
 
 		while (results.next()) {
 			Department currentDepartment = mapRowToDepartment(results);
-			if (currentDepartment.getName().equalsIgnoreCase(nameSearch)) {
-				foundDepartments.add(currentDepartment);
-			}
+			
+//				if (currentDepartment.getName().equalsIgnoreCase(nameSearch)) {
+					foundDepartments.add(currentDepartment);
+//				}
+			
+			
 
 		}
 
@@ -59,9 +62,26 @@ public class JDBCDepartmentDAO implements DepartmentDAO {
 
 	@Override
 	public Department createDepartment(Department newDepartment) {
-		String sql = "INSERT INTO department (name) VALUES (?" + ")";
-		jdbcTemplate.update(sql, newDepartment.getName());
-		return newDepartment;
+		
+//		String sql = "INSERT INTO department (name, department_id) " +
+//				"VALUES (?, ?)";
+//		jdbcTemplate.update(sql,newDepartment.getName(), newDepartment.getId());			
+//		return newDepartment; 
+		
+		
+		String sql = "INSERT INTO department (name) " +
+		"VALUES (?) RETURNING department_id";
+		SqlRowSet result = jdbcTemplate.queryForRowSet(sql,newDepartment.getName());
+		while (result.next()) {
+			newDepartment.setId(result.getLong("department_id")); 
+			} 			
+		return newDepartment; 
+		
+		
+//		String sql = "INSERT INTO department (name) VALUES (?" + ")";
+//		jdbcTemplate.update(sql, newDepartment.getName());
+//		
+//		return newDepartment;
 	}
 
 	@Override
@@ -70,7 +90,6 @@ public class JDBCDepartmentDAO implements DepartmentDAO {
 		SqlRowSet result = jdbcTemplate.queryForRowSet(sql);
 		Department theSearchedDepartment = mapRowToDepartment(result);
 		return theSearchedDepartment;
-
 	}
 
 	public Department mapRowToDepartment(SqlRowSet results) {
